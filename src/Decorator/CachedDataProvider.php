@@ -6,7 +6,6 @@
  */
 declare(strict_types=1);
 
-
 namespace src\Decorator;
 
 use Psr\Log\LoggerInterface;
@@ -18,7 +17,7 @@ use src\Integration\DataProvider\ApiInterface as DataProviderInterface;
 
 class CachedDataProvider implements DataProviderInterface
 {
-    private const LOCK_TIME = 1;
+    private const LOCK_TIME = 2;
     private const CACHE_TTL = 86400;    // seconds, 86400 - 1 day
 
     private $cache;
@@ -54,7 +53,7 @@ class CachedDataProvider implements DataProviderInterface
         $cacheKey = $this->getCacheKey($requestParams);
 
         // Блокировка обоснована в случае соблюдения всех следующих условий:
-        // 1) доступ к внешнему сервису очень долгий
+        // 1) доступ к внешнему сервису довольно долгий
         // 2) cache hit rate хороший
         // 3) ожидается большое число вызовов текущего метода
         // 4) но не настолько большое, чтобы блокировки нам сильно мешали
@@ -84,7 +83,7 @@ class CachedDataProvider implements DataProviderInterface
             }
         } catch (\Exception $e) {
             $lock->unlock();
-            $this->logger->critical('Error');
+            $this->logger->critical('Unexpected error occurred: ' . $e->getMessage());
             throw $e;
         }
 
